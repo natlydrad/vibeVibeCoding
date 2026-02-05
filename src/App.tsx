@@ -69,7 +69,7 @@ function App() {
       code,
       bpm: engine.bpm,
       volume: engine.volume,
-      title: 'VibeLoops patch',
+      title: 'vibeVibeCoding patch',
     }
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -123,7 +123,7 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <span>VibeLoops</span>
+        <span>vibeVibeCoding</span>
         <div className="app-header-actions">
           <button type="button" onClick={handleSave}>Save</button>
           <button type="button" onClick={handleExportTs}>Export .ts</button>

@@ -4,7 +4,7 @@ import { evaluatePatch } from './evaluatePatch'
 import { defaultPatch } from './defaultPatch'
 import type { PatchContext, PatchHandle, ScheduledEvent } from './types'
 
-const STORAGE_KEY = 'vibeloops-state'
+const STORAGE_KEY = 'vibevibecoding-state'
 const DEFAULT_BPM = 120
 const DEFAULT_VOLUME = 0
 

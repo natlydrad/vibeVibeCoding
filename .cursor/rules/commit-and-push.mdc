@@ -1,0 +1,14 @@
+---
+description: Commit and push after major changes or feature adds
+alwaysApply: true
+---
+
+# Git: commit and push after major work
+
+After completing a **major change**, **new feature**, or **refactor**:
+
+1. Stage changes: `git add .`
+2. Commit with a short message: `git commit -m "Description of what changed"`
+3. Push: `git push`
+
+Do this at the end of the task so the remote repo stays in sync. Do not skip this step unless the user says otherwise.

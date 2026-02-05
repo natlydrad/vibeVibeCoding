@@ -1,4 +1,4 @@
-# VibeLoops
+# vibeVibeCoding
 
 MVP web app for vibe-coding music loops in the browser. Edit Tone.js patch code, see a timeline of scheduled events, and use natural-language-style chat to apply rule-based edits.
 
@@ -33,7 +33,7 @@ Time in events is in “bars” (e.g. 0 = bar 0, 1.5 = bar 1 beat 3). Lanes (e.g
 
 ## File save / export / import
 
-- **Save** – writes current code, BPM, and volume to `localStorage` (key `vibeloops-state`). Restored on next load.
+- **Save** – writes current code, BPM, and volume to `localStorage` (key `vibevibecoding-state`). Restored on next load.
 - **Export .ts** – downloads the patch code as a `.ts` file.
 - **Export .json** – downloads `{ code, bpm, volume, title }` as JSON.
 - **Open file** – pick a `.ts` or `.json` file; code (and optionally BPM/volume) is loaded and applied.
