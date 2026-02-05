@@ -156,12 +156,14 @@ export function Timeline({
                   >
                     {mutedLanes.has(lane) ? (
                       <svg className="timeline-mute-icon" viewBox="0 0 16 16" width="12" height="12" aria-hidden>
-                        <path fill="currentColor" d="M3 5h2v6H3V5zm4-1v8l5-4-5-4z" />
+                        <path fill="currentColor" d="M3 5h2v6H3V5z" />
+                        <path fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" d="M5.5 6Q7 8 5.5 10M6.5 5Q9 8 6.5 11M7.5 4Q11 8 7.5 12" />
                         <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" d="M2 2l12 12" />
                       </svg>
                     ) : (
                       <svg className="timeline-mute-icon" viewBox="0 0 16 16" width="12" height="12" aria-hidden>
-                        <path fill="currentColor" d="M3 5h2v6H3V5zm4-1v8l5-4-5-4z" />
+                        <path fill="currentColor" d="M3 5h2v6H3V5z" />
+                        <path fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" d="M5.5 6Q7 8 5.5 10M6.5 5Q9 8 6.5 11M7.5 4Q11 8 7.5 12" />
                       </svg>
                     )}
                   </button>
