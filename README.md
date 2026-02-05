@@ -1,6 +1,6 @@
 # vibeVibeCoding
 
-MVP web app for vibe-coding music loops in the browser. Edit Tone.js patch code, see a timeline of scheduled events, and use natural-language-style chat to apply rule-based edits.
+MVP web app for vibe-coding music loops in the browser. Edit Tone.js patch code, see a timeline of scheduled events, and use natural-language-style chat (LLM or rule-based) to apply edits.
 
 ## Run
 
@@ -10,6 +10,20 @@ npm run dev
 ```
 
 Open the URL shown (e.g. http://localhost:5173). Use **Apply Code** after editing to run the patch. **Play** starts the transport; **Stop** stops it.
+
+### LLM chat (optional)
+
+For open-ended chat commands (e.g. “play an arpeggio over C major”, “make a jersey club style beat”), run the chat-api server:
+
+```bash
+cd chat-api && npm install && cp .env.example .env
+# Add your OpenAI API key to chat-api/.env
+npm run start
+```
+
+With the chat-api running on port 5002, the Vite dev server proxies `/chat-api` to it. The API key stays server-side.
+
+**Production**: Set `VITE_CHAT_API_URL` to your deployed chat-api URL (e.g. `https://your-chat-api.onrender.com`).
 
 ## Patch API
 
@@ -38,18 +52,17 @@ Time in events is in “bars” (e.g. 0 = bar 0, 1.5 = bar 1 beat 3). Lanes (e.g
 - **Export .json** – downloads `{ code, bpm, volume, title }` as JSON.
 - **Open file** – pick a `.ts` or `.json` file; code (and optionally BPM/volume) is loaded and applied.
 
-## Chat rules (stub assistant)
+## Chat (LLM + rule fallback)
 
-The chat uses local rule-based pattern matching. To extend:
+The chat tries the LLM first (when chat-api is running); if unavailable or it errors, it falls back to local rule-based pattern matching.
 
-1. Open `src/chat/rules.ts`.
-2. Add an entry to the `rules` array:
-   - `pattern`: `RegExp` or `(text: string) => boolean`
-   - `edit`: `(code: string, bpm: number) => string` – returns modified code
-   - `message`: string shown as the assistant reply
-   - Optional `setBpm`: `(currentBpm: number) => number` – if set, the engine BPM is updated to the returned value
+**Rule-based rules** – extend in `src/chat/rules.ts`:
+- `pattern`: `RegExp` or `(text: string) => boolean`
+- `edit`: `(code: string, bpm: number) => string` – returns modified code
+- `message`: string shown as the assistant reply
+- Optional `setBpm`: `(currentBpm: number) => number`
 
-Examples already implemented: “make it faster” / “slower” (BPM), “add swing”, “more hats” / “fewer hats”, “darker” (filter), “add reverb”.
+Examples: “make it faster” / “slower” (BPM), “add swing”, “more hats” / “fewer hats”, “darker” (filter), “add reverb”.
 
 ## Onion skin / change marking
 

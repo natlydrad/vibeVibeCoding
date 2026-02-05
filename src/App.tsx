@@ -6,7 +6,7 @@ import { EditorPanel } from './components/EditorPanel'
 import { ChatPanel } from './components/ChatPanel'
 import { ChangeMarkersPanel } from './components/ChangeMarkersPanel'
 import { useCodeDiff } from './diff/useCodeDiff'
-import { processChatMessage } from './chat/stubAssistant'
+import { processChatMessageAsync } from './chat/stubAssistant'
 
 function App() {
   const engine = useAudioEngine()
@@ -111,7 +111,7 @@ function App() {
   }, [engine])
 
   const handleChatSend = useCallback(
-    (text: string) => processChatMessage(text, code, engine.bpm),
+    (text: string) => processChatMessageAsync(text, code, engine.bpm),
     [code, engine.bpm]
   )
 

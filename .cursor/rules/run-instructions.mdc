@@ -1,0 +1,14 @@
+---
+description: Run and verify run instructions when implementing features
+alwaysApply: true
+---
+
+# Run instructions: verify when applicable
+
+When you add or change run instructions (e.g. in README, implementation summaries, or docs):
+
+1. **Run the instructions** – Start required servers and processes (e.g. `npm run start`, `npm run dev`).
+2. **Verify they work** – Confirm processes start successfully and no errors occur.
+3. **Apply when applicable** – Do this for new backends, new dev workflows, or changes to startup commands.
+
+Example: After adding a chat-api server, run `cd chat-api && npm run start` and `npm run dev` to verify both start.
