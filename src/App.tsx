@@ -1,21 +1,65 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useAudioEngine, savePersisted } from './audio/useAudioEngine'
 import { TransportControls } from './components/TransportControls'
 import { VisualizerPanel } from './components/VisualizerPanel'
 import { EditorPanel } from './components/EditorPanel'
 import { ChatPanel } from './components/ChatPanel'
 import { ChangeMarkersPanel } from './components/ChangeMarkersPanel'
+import { HistoryPanel } from './components/HistoryPanel'
 import { useCodeDiff } from './diff/useCodeDiff'
 import { processChatMessageAsync } from './chat/stubAssistant'
+
+const HISTORY_STORAGE_KEY = 'vibevibecoding-history'
+const HISTORY_CAP = 50
+
+export interface HistoryEntry {
+  code: string
+  at: string
+  label: 'Applied' | 'Saved'
+}
+
+function loadHistory(): HistoryEntry[] {
+  try {
+    const raw = localStorage.getItem(HISTORY_STORAGE_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw) as HistoryEntry[]
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+function saveHistory(entries: HistoryEntry[]): void {
+  try {
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(entries.slice(-HISTORY_CAP)))
+  } catch {
+    // ignore
+  }
+}
 
 function App() {
   const engine = useAudioEngine()
   const [code, setCode] = useState('')
   const [previousCode, setPreviousCode] = useState<string | null>(null)
   const [showGhost, setShowGhost] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
+  const [history, setHistory] = useState<HistoryEntry[]>(loadHistory)
+  const historyWrapRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    setCode(engine.getInitialCode())
+    if (!showHistory) return
+    const onPointerDown = (e: PointerEvent) => {
+      if (historyWrapRef.current?.contains(e.target as Node)) return
+      setShowHistory(false)
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    return () => document.removeEventListener('pointerdown', onPointerDown)
+  }, [showHistory])
+
+  useEffect(() => {
+    const initial = engine.getInitialCode()
+    setCode(initial)
+    setPreviousCode(initial)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -34,9 +78,14 @@ function App() {
 
   const handleApply = useCallback(() => {
     const ok = engine.applyCode(code)
-    if (ok) setPreviousCode(code)
+    if (ok) {
+      setPreviousCode(code)
+      const next = [...history, { code, at: new Date().toISOString(), label: 'Applied' as const }].slice(-HISTORY_CAP)
+      setHistory(next)
+      saveHistory(next)
+    }
     engine.setError(null)
-  }, [code, engine])
+  }, [code, engine, history])
 
   const handleRevert = useCallback(() => {
     const lastGood = engine.revertToLastGood()
@@ -52,7 +101,10 @@ function App() {
       volume: engine.volume,
       lastSavedAt: new Date().toISOString(),
     })
-  }, [code, engine.bpm, engine.volume])
+    const next = [...history, { code, at: new Date().toISOString(), label: 'Saved' as const }].slice(-HISTORY_CAP)
+    setHistory(next)
+    saveHistory(next)
+  }, [code, engine.bpm, engine.volume, history])
 
   const handleExportTs = useCallback(() => {
     const blob = new Blob([code], { type: 'text/plain' })
@@ -120,11 +172,32 @@ function App() {
     if (result.bpm != null) engine.setBpm(result.bpm)
   }, [engine])
 
+  const handleRestoreHistory = useCallback((entry: HistoryEntry) => {
+    setCode(entry.code)
+    setShowHistory(false)
+  }, [])
+
   return (
     <div className="app">
       <header className="app-header">
         <span>vibeVibeCoding</span>
         <div className="app-header-actions">
+          <div className="history-dropdown-wrap" ref={historyWrapRef}>
+            <button
+              type="button"
+              className="history-toggle"
+              onClick={() => setShowHistory((s) => !s)}
+              aria-expanded={showHistory}
+              aria-haspopup="true"
+            >
+              History
+            </button>
+            {showHistory && (
+              <div className="history-dropdown" role="dialog" aria-label="Version history">
+                <HistoryPanel history={history} onRestore={handleRestoreHistory} />
+              </div>
+            )}
+          </div>
           <button type="button" onClick={handleSave}>Save</button>
           <button type="button" onClick={handleExportTs}>Export .ts</button>
           <button type="button" onClick={handleExportJson}>Export .json</button>

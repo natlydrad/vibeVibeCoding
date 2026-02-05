@@ -50,6 +50,74 @@ body {
   background: #444;
 }
 
+.history-dropdown-wrap {
+  position: relative;
+}
+
+.history-toggle {
+  /* uses .app-header-actions button styles */
+}
+
+.history-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.25rem;
+  min-width: 220px;
+  max-height: 320px;
+  overflow: auto;
+  background: #1a1a1a;
+  border: 1px solid #444;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  z-index: 100;
+}
+
+.history-panel {
+  padding: 0.25rem 0;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.history-empty {
+  padding: 0.75rem 1rem;
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.history-entry {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  text-align: left;
+  font-size: 0.8rem;
+  background: transparent;
+  color: #eee;
+  border: none;
+  cursor: pointer;
+  border-radius: 0;
+}
+
+.history-entry:hover {
+  background: #2a2a2a;
+}
+
+.history-entry-label {
+  font-weight: 600;
+  color: #aaa;
+}
+
+.history-entry-time {
+  color: #888;
+  font-size: 0.75rem;
+}
+
 .main {
   flex: 1;
   display: flex;
@@ -314,6 +382,24 @@ body {
   background: #1a1a1a;
 }
 
+.timeline-ruler {
+  position: relative;
+  height: 22px;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+  background: #1a1a1a;
+  border-bottom: 1px solid #252525;
+}
+
+.timeline-ruler-label {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.7rem;
+  color: #888;
+  pointer-events: none;
+}
+
 .timeline-grid-wrap {
   flex: 1;
   position: relative;
@@ -325,11 +411,24 @@ body {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 2px;
+  width: 3px;
   background: #f1c40f;
+  box-shadow: 0 0 6px rgba(241, 196, 15, 0.6);
   z-index: 2;
   pointer-events: none;
   transition: left 0.05s linear;
+}
+
+.timeline-playhead::before {
+  content: 'now';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.6rem;
+  color: #f1c40f;
+  white-space: nowrap;
+  text-shadow: 0 0 4px #111;
 }
 
 .timeline-grid {

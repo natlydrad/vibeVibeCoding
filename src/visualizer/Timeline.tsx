@@ -36,10 +36,22 @@ export function Timeline({ events, transportSeconds, bpm }: TimelineProps) {
           ))}
         </div>
       </div>
+      <div className="timeline-ruler">
+        {Array.from({ length: BARS }, (_, i) => (
+          <div
+            key={i}
+            className="timeline-ruler-label"
+            style={{ left: `${(i / BARS) * 100}%` }}
+          >
+            Bar {i + 1}
+          </div>
+        ))}
+      </div>
       <div className="timeline-grid-wrap">
         <div
           className="timeline-playhead"
           style={{ left: `${playheadPosition * 100}%` }}
+          title="Playhead (current playback position). Vertical lines are beat boundaries."
         />
         <div className="timeline-grid">
           {Array.from({ length: BARS * BEATS_PER_BAR + 1 }, (_, i) => (

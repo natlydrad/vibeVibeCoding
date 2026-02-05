@@ -3,6 +3,8 @@ import Editor from '@monaco-editor/react'
 import type { LineChange } from '../diff/useCodeDiff'
 import { getChangeDecorations } from '../diff/onionSkin'
 
+type MonacoEditor = Parameters<NonNullable<Parameters<typeof Editor>[0]['onMount']>>[0]
+
 interface EditorPanelProps {
   code: string
   onChange: (value: string) => void
@@ -20,7 +22,8 @@ export function EditorPanel({
   ghostCode,
   onGhostToggle,
 }: EditorPanelProps) {
-  const editorRef = useRef<Parameters<NonNullable<Parameters<typeof Editor>[0]['onMount']>>[0] | null>(null)
+  const editorRef = useRef<MonacoEditor | null>(null)
+  const ghostEditorRef = useRef<MonacoEditor | null>(null)
   const monacoRef = useRef<typeof import('monaco-editor') | null>(null)
   const decorationIdsRef = useRef<string[]>([])
 
@@ -31,6 +34,24 @@ export function EditorPanel({
     const newDecos = getChangeDecorations(decorations, monaco)
     decorationIdsRef.current = editor.deltaDecorations(decorationIdsRef.current, newDecos)
   }, [decorations])
+
+  useEffect(() => {
+    if (!showGhost) ghostEditorRef.current = null
+  }, [showGhost])
+
+  // Sync main editor scroll to ghost editor
+  useEffect(() => {
+    const main = editorRef.current
+    const ghost = ghostEditorRef.current
+    if (!main || !ghost || !showGhost) return
+    const syncScroll = () => {
+      ghost.setScrollTop(main.getScrollTop())
+      ghost.setScrollLeft(main.getScrollLeft())
+    }
+    syncScroll()
+    const disposable = main.onDidScrollChange(syncScroll)
+    return () => disposable.dispose()
+  }, [showGhost, ghostCode])
 
   return (
     <div className="editor-panel">
@@ -55,6 +76,14 @@ export function EditorPanel({
                 scrollBeyondLastLine: false,
               }}
               theme="vs-dark"
+              onMount={(editor) => {
+                ghostEditorRef.current = editor
+                const main = editorRef.current
+                if (main) {
+                  editor.setScrollTop(main.getScrollTop())
+                  editor.setScrollLeft(main.getScrollLeft())
+                }
+              }}
             />
           </div>
         )}
