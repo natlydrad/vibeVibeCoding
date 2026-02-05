@@ -152,8 +152,18 @@ export function Timeline({
                     onClick={() => onMute?.(lane)}
                     title={mutedLanes.has(lane) ? 'Unmute channel' : 'Mute channel'}
                     aria-pressed={mutedLanes.has(lane)}
+                    aria-label={mutedLanes.has(lane) ? 'Unmute channel' : 'Mute channel'}
                   >
-                    M
+                    {mutedLanes.has(lane) ? (
+                      <svg className="timeline-mute-icon" viewBox="0 0 16 16" width="12" height="12" aria-hidden>
+                        <path fill="currentColor" d="M3 5h2v6H3V5zm4-1v8l5-4-5-4z" />
+                        <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" d="M2 2l12 12" />
+                      </svg>
+                    ) : (
+                      <svg className="timeline-mute-icon" viewBox="0 0 16 16" width="12" height="12" aria-hidden>
+                        <path fill="currentColor" d="M3 5h2v6H3V5zm4-1v8l5-4-5-4z" />
+                      </svg>
+                    )}
                   </button>
                   <button
                     type="button"

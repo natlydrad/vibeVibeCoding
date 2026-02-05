@@ -411,6 +411,11 @@ body {
   background: #444;
 }
 
+.timeline-mute-icon {
+  display: block;
+  vertical-align: middle;
+}
+
 .timeline-lane-mute.timeline-lane-mute-on {
   background: #555;
   color: #ccc;
