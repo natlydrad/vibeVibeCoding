@@ -468,6 +468,15 @@ body {
   pointer-events: none;
 }
 
+.timeline-block-draggable {
+  pointer-events: auto;
+  cursor: grab;
+}
+
+.timeline-block-draggable:active {
+  cursor: grabbing;
+}
+
 .oscilloscope {
   flex-shrink: 0;
   margin-top: 0.5rem;

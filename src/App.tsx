@@ -8,6 +8,8 @@ import { ChangeMarkersPanel } from './components/ChangeMarkersPanel'
 import { HistoryPanel } from './components/HistoryPanel'
 import { useCodeDiff } from './diff/useCodeDiff'
 import { processChatMessageAsync } from './chat/stubAssistant'
+import { generatePatchFromEvents } from './audio/generatePatchFromEvents'
+import type { ScheduledEvent } from './audio/types'
 
 const HISTORY_STORAGE_KEY = 'vibevibecoding-history'
 const HISTORY_CAP = 50
@@ -177,6 +179,17 @@ function App() {
     setShowHistory(false)
   }, [])
 
+  const handleTimelineEventsChange = useCallback(
+    (newEvents: ScheduledEvent[]) => {
+      const newCode = generatePatchFromEvents(newEvents)
+      setCode(newCode)
+      setPreviousCode(newCode)
+      engine.applyCode(newCode)
+      engine.setError(null)
+    },
+    [engine]
+  )
+
   return (
     <div className="app">
       <header className="app-header">
@@ -211,6 +224,7 @@ function App() {
             transportSeconds={engine.transportSeconds}
             bpm={engine.bpm}
             waveformRef={engine.waveformRef}
+            onEventsChange={handleTimelineEventsChange}
           />
         </div>
         <div className="right-panel">

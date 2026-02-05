@@ -1,9 +1,13 @@
+import { useRef, useCallback, useState, useEffect } from 'react'
 import type { ScheduledEvent } from '../audio/types'
+
+const SNAP_BEAT = 0.25
 
 interface TimelineProps {
   events: ScheduledEvent[]
   transportSeconds: number
   bpm: number
+  onEventsChange?: (events: ScheduledEvent[]) => void
 }
 
 const LANES = ['kick', 'snare', 'hats', 'bass']
@@ -16,14 +20,66 @@ const LANE_COLORS: Record<string, string> = {
 const BEATS_PER_BAR = 4
 const BARS = 4
 
-export function Timeline({ events, transportSeconds, bpm }: TimelineProps) {
+function snap(time: number): number {
+  return Math.round(time / SNAP_BEAT) * SNAP_BEAT
+}
+
+export function Timeline({ events, transportSeconds, bpm, onEventsChange }: TimelineProps) {
   const totalBeats = BEATS_PER_BAR * BARS
   const secondsPerBeat = 60 / bpm
   const totalSeconds = totalBeats * secondsPerBeat
+  const gridWrapRef = useRef<HTMLDivElement>(null)
+  const [dragging, setDragging] = useState<{ index: number; startTime: number; startX: number } | null>(null)
 
   const playheadPosition = totalSeconds > 0
     ? Math.min(1, (transportSeconds % totalSeconds) / totalSeconds)
     : 0
+
+  const editable = Boolean(onEventsChange)
+
+  const handleBlockMouseDown = useCallback(
+    (e: React.MouseEvent, event: ScheduledEvent) => {
+      if (!editable) return
+      e.preventDefault()
+      const index = events.indexOf(event)
+      if (index < 0) return
+      setDragging({ index, startTime: event.time, startX: e.clientX })
+    },
+    [editable, events]
+  )
+
+  const handlePointerMove = useCallback(
+    (e: PointerEvent) => {
+      if (!dragging || !onEventsChange || !gridWrapRef.current) return
+      const rect = gridWrapRef.current.getBoundingClientRect()
+      const width = rect.width
+      if (width <= 0) return
+      const ev = events[dragging.index]
+      if (!ev) return
+      const deltaBeats = ((e.clientX - dragging.startX) / width) * totalBeats
+      let newTime = snap(dragging.startTime + deltaBeats)
+      newTime = Math.max(0, Math.min(totalBeats - ev.duration, newTime))
+      const next = events.slice()
+      next[dragging.index] = { ...ev, time: newTime }
+      onEventsChange(next)
+      setDragging((d) => (d ? { ...d, startTime: newTime, startX: e.clientX } : null))
+    },
+    [dragging, events, onEventsChange, totalBeats]
+  )
+
+  const handlePointerUp = useCallback(() => {
+    setDragging(null)
+  }, [])
+
+  useEffect(() => {
+    if (!dragging) return
+    window.addEventListener('pointermove', handlePointerMove)
+    window.addEventListener('pointerup', handlePointerUp)
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove)
+      window.removeEventListener('pointerup', handlePointerUp)
+    }
+  }, [dragging, handlePointerMove, handlePointerUp])
 
   return (
     <div className="timeline">
@@ -47,7 +103,7 @@ export function Timeline({ events, transportSeconds, bpm }: TimelineProps) {
           </div>
         ))}
       </div>
-      <div className="timeline-grid-wrap">
+      <div className="timeline-grid-wrap" ref={gridWrapRef}>
         <div
           className="timeline-playhead"
           style={{ left: `${playheadPosition * 100}%` }}
@@ -72,14 +128,15 @@ export function Timeline({ events, transportSeconds, bpm }: TimelineProps) {
                   const widthPct = Math.max(2, (e.duration / totalBeats) * 100)
                   return (
                     <div
-                      key={`${lane}-${i}`}
-                      className="timeline-block"
+                      key={`${lane}-${i}-${e.time}`}
+                      className={`timeline-block ${editable ? 'timeline-block-draggable' : ''}`}
                       style={{
                         left: `${startPct}%`,
                         width: `${widthPct}%`,
                         backgroundColor: LANE_COLORS[lane] ?? '#666',
                       }}
-                      title={e.label}
+                      title={editable ? `${e.label} — drag to move` : e.label}
+                      onPointerDown={(ev) => handleBlockMouseDown(ev, e)}
                     />
                   )
                 })}
