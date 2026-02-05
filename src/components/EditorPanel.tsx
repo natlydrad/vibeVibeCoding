@@ -67,6 +67,11 @@ export function EditorPanel({
             onMount={(editor, monaco) => {
               editorRef.current = editor
               monacoRef.current = monaco ?? null
+              // Patch code runs in sandbox with Tone injected; add ambient decl so Monaco doesn't show red
+              monaco?.languages.typescript.typescriptDefaults.addExtraLib(
+                '/** Tone.js - injected at runtime by the patch evaluator */\ndeclare const Tone: any;',
+                'ts:patch-globals.d.ts'
+              )
             }}
             options={{
               minimap: { enabled: false },
