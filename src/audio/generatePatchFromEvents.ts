@@ -6,12 +6,19 @@ const LANES = ['kick', 'snare', 'hats', 'bass']
 /**
  * Generate buildPatch source code from a list of timeline events.
  * Produces a minimal patch with kick, snare, hats, bass that plays exactly these events.
+ * If mutedLanes is provided, muted lanes are connected through Tone.Gain(0).
  */
-export function generatePatchFromEvents(events: ScheduledEvent[]): string {
+export function generatePatchFromEvents(
+  events: ScheduledEvent[],
+  mutedLanes?: Set<string>
+): string {
   const byLane: Record<string, ScheduledEvent[]> = {}
   for (const lane of LANES) {
     byLane[lane] = events.filter((e) => e.lane === lane).sort((a, b) => a.time - b.time)
   }
+
+  const muted = mutedLanes ?? new Set<string>()
+  const laneTarget = (lane: string, gainName: string) => (muted.has(lane) ? gainName : 'vol')
 
   const lines: string[] = []
   lines.push('export function buildPatch(ctx) {')
@@ -27,13 +34,29 @@ export function generatePatchFromEvents(events: ScheduledEvent[]): string {
   lines.push('  var vol = new Tone.Volume(volume).connect(destination);')
   lines.push('  nodes.push(vol);')
   lines.push('')
-  lines.push('  var kick = new Tone.MembraneSynth({ pitchDecay: 0.05, octaves: 6, envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.5 } }).connect(vol);')
+  if (muted.has('kick')) {
+    lines.push('  var kickGain = new Tone.Gain(0).connect(vol);')
+    lines.push('  nodes.push(kickGain);')
+  }
+  lines.push('  var kick = new Tone.MembraneSynth({ pitchDecay: 0.05, octaves: 6, envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.5 } }).connect(' + laneTarget('kick', 'kickGain') + ');')
   lines.push('  nodes.push(kick);')
-  lines.push('  var snare = new Tone.NoiseSynth({ noise: { type: "white" }, envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.2 } }).connect(vol);')
+  if (muted.has('snare')) {
+    lines.push('  var snareGain = new Tone.Gain(0).connect(vol);')
+    lines.push('  nodes.push(snareGain);')
+  }
+  lines.push('  var snare = new Tone.NoiseSynth({ noise: { type: "white" }, envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.2 } }).connect(' + laneTarget('snare', 'snareGain') + ');')
   lines.push('  nodes.push(snare);')
-  lines.push('  var hat = new Tone.MetalSynth({ frequency: 200, envelope: { attack: 0.001, decay: 0.05, release: 0.05 }, harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 0.5 }).connect(vol);')
+  if (muted.has('hats')) {
+    lines.push('  var hatGain = new Tone.Gain(0).connect(vol);')
+    lines.push('  nodes.push(hatGain);')
+  }
+  lines.push('  var hat = new Tone.MetalSynth({ frequency: 200, envelope: { attack: 0.001, decay: 0.05, release: 0.05 }, harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 0.5 }).connect(' + laneTarget('hats', 'hatGain') + ');')
   lines.push('  nodes.push(hat);')
-  lines.push('  var bass = new Tone.Synth({ oscillator: { type: "triangle" }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.4, release: 0.5 } }).connect(vol);')
+  if (muted.has('bass')) {
+    lines.push('  var bassGain = new Tone.Gain(0).connect(vol);')
+    lines.push('  nodes.push(bassGain);')
+  }
+  lines.push('  var bass = new Tone.Synth({ oscillator: { type: "triangle" }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.4, release: 0.5 } }).connect(' + laneTarget('bass', 'bassGain') + ');')
   lines.push('  nodes.push(bass);')
   lines.push('')
   lines.push('  events.forEach(function(e) { registerEvent(e); });')

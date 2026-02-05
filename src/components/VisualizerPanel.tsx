@@ -8,9 +8,21 @@ interface VisualizerPanelProps {
   bpm: number
   waveformRef?: React.RefObject<{ getValue(): Float32Array } | null>
   onEventsChange?: (events: ScheduledEvent[]) => void
+  onMute?: (lane: string) => void
+  onClear?: (lane: string) => void
+  mutedLanes?: Set<string>
 }
 
-export function VisualizerPanel({ events, transportSeconds, bpm, waveformRef, onEventsChange }: VisualizerPanelProps) {
+export function VisualizerPanel({
+  events,
+  transportSeconds,
+  bpm,
+  waveformRef,
+  onEventsChange,
+  onMute,
+  onClear,
+  mutedLanes,
+}: VisualizerPanelProps) {
   return (
     <div className="visualizer-panel">
       <Timeline
@@ -18,6 +30,9 @@ export function VisualizerPanel({ events, transportSeconds, bpm, waveformRef, on
         transportSeconds={transportSeconds}
         bpm={bpm}
         onEventsChange={onEventsChange}
+        onMute={onMute}
+        onClear={onClear}
+        mutedLanes={mutedLanes}
       />
       <Oscilloscope waveformRef={waveformRef} />
     </div>

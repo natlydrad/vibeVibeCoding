@@ -46,6 +46,7 @@ function App() {
   const [showGhost, setShowGhost] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
   const [history, setHistory] = useState<HistoryEntry[]>(loadHistory)
+  const [mutedLanes, setMutedLanes] = useState<Set<string>>(() => new Set())
   const historyWrapRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -181,13 +182,35 @@ function App() {
 
   const handleTimelineEventsChange = useCallback(
     (newEvents: ScheduledEvent[]) => {
-      const newCode = generatePatchFromEvents(newEvents)
+      const newCode = generatePatchFromEvents(newEvents, mutedLanes)
       setCode(newCode)
       setPreviousCode(newCode)
       engine.applyCode(newCode)
       engine.setError(null)
     },
-    [engine]
+    [engine, mutedLanes]
+  )
+
+  const handleMute = useCallback(
+    (lane: string) => {
+      const next = new Set(mutedLanes)
+      if (next.has(lane)) next.delete(lane)
+      else next.add(lane)
+      setMutedLanes(next)
+      const newCode = generatePatchFromEvents(engine.events, next)
+      setCode(newCode)
+      setPreviousCode(newCode)
+      engine.applyCode(newCode)
+      engine.setError(null)
+    },
+    [engine, mutedLanes]
+  )
+
+  const handleClearLane = useCallback(
+    (lane: string) => {
+      handleTimelineEventsChange(engine.events.filter((e) => e.lane !== lane))
+    },
+    [engine.events, handleTimelineEventsChange]
   )
 
   return (
@@ -225,6 +248,9 @@ function App() {
             bpm={engine.bpm}
             waveformRef={engine.waveformRef}
             onEventsChange={handleTimelineEventsChange}
+            onMute={handleMute}
+            onClear={handleClearLane}
+            mutedLanes={mutedLanes}
           />
         </div>
         <div className="right-panel">

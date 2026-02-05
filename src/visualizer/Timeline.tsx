@@ -8,6 +8,9 @@ interface TimelineProps {
   transportSeconds: number
   bpm: number
   onEventsChange?: (events: ScheduledEvent[]) => void
+  onMute?: (lane: string) => void
+  onClear?: (lane: string) => void
+  mutedLanes?: Set<string>
 }
 
 const LANES = ['kick', 'snare', 'hats', 'bass']
@@ -31,7 +34,15 @@ function snap(time: number): number {
   return Math.round(time / SNAP_BEAT) * SNAP_BEAT
 }
 
-export function Timeline({ events, transportSeconds, bpm, onEventsChange }: TimelineProps) {
+export function Timeline({
+  events,
+  transportSeconds,
+  bpm,
+  onEventsChange,
+  onMute,
+  onClear,
+  mutedLanes = new Set(),
+}: TimelineProps) {
   const totalBeats = BEATS_PER_BAR * BARS
   const secondsPerBeat = 60 / bpm
   const totalSeconds = totalBeats * secondsPerBeat
@@ -127,8 +138,33 @@ export function Timeline({ events, transportSeconds, bpm, onEventsChange }: Time
       <div className="timeline-header">
         <div className="timeline-labels">
           {LANES.map((lane) => (
-            <div key={lane} className="timeline-lane-label" style={{ borderColor: LANE_COLORS[lane] ?? '#666' }}>
-              {lane}
+            <div
+              key={lane}
+              className="timeline-lane-label"
+              style={{ borderColor: LANE_COLORS[lane] ?? '#666' }}
+            >
+              <span className="timeline-lane-name">{lane}</span>
+              {editable && (
+                <span className="timeline-lane-actions">
+                  <button
+                    type="button"
+                    className={`timeline-lane-btn timeline-lane-mute ${mutedLanes.has(lane) ? 'timeline-lane-mute-on' : ''}`}
+                    onClick={() => onMute?.(lane)}
+                    title={mutedLanes.has(lane) ? 'Unmute channel' : 'Mute channel'}
+                    aria-pressed={mutedLanes.has(lane)}
+                  >
+                    M
+                  </button>
+                  <button
+                    type="button"
+                    className="timeline-lane-btn timeline-lane-clear"
+                    onClick={() => onClear?.(lane)}
+                    title="Clear all events in this lane"
+                  >
+                    Clear
+                  </button>
+                </span>
+              )}
             </div>
           ))}
         </div>
