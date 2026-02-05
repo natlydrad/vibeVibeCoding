@@ -20,6 +20,13 @@ const LANE_COLORS: Record<string, string> = {
 const BEATS_PER_BAR = 4
 const BARS = 4
 
+const DEFAULT_EVENT: Record<string, { duration: number; label: string }> = {
+  kick: { duration: 0.25, label: 'Kick' },
+  snare: { duration: 0.25, label: 'Snare' },
+  hats: { duration: 0.125, label: 'Hat' },
+  bass: { duration: 0.5, label: 'C2' },
+}
+
 function snap(time: number): number {
   return Math.round(time / SNAP_BEAT) * SNAP_BEAT
 }
@@ -71,6 +78,40 @@ export function Timeline({ events, transportSeconds, bpm, onEventsChange }: Time
     setDragging(null)
   }, [])
 
+  const handleBlockDoubleClick = useCallback(
+    (e: React.MouseEvent, event: ScheduledEvent) => {
+      if (!editable || !onEventsChange) return
+      e.preventDefault()
+      e.stopPropagation()
+      const index = events.indexOf(event)
+      if (index < 0) return
+      const next = events.filter((_, i) => i !== index)
+      onEventsChange(next)
+    },
+    [editable, events, onEventsChange]
+  )
+
+  const handleLaneDoubleClick = useCallback(
+    (e: React.MouseEvent, lane: string) => {
+      if (!editable || !onEventsChange || !gridWrapRef.current) return
+      const rect = gridWrapRef.current.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const width = rect.width
+      if (width <= 0 || x < 0 || x > width) return
+      const time = snap((x / width) * totalBeats)
+      const timeClamped = Math.max(0, Math.min(totalBeats - SNAP_BEAT, time))
+      const def = DEFAULT_EVENT[lane] ?? { duration: 0.25, label: lane }
+      const newEvent: ScheduledEvent = {
+        time: timeClamped,
+        duration: def.duration,
+        label: def.label,
+        lane,
+      }
+      onEventsChange([...events, newEvent])
+    },
+    [editable, events, onEventsChange, totalBeats]
+  )
+
   useEffect(() => {
     if (!dragging) return
     window.addEventListener('pointermove', handlePointerMove)
@@ -120,7 +161,12 @@ export function Timeline({ events, transportSeconds, bpm, onEventsChange }: Time
         </div>
         <div className="timeline-lanes">
           {LANES.map((lane) => (
-            <div key={lane} className="timeline-lane">
+            <div
+              key={lane}
+              className={`timeline-lane ${editable ? 'timeline-lane-editable' : ''}`}
+              title={editable ? 'Double-click empty space to add' : undefined}
+              onDoubleClick={(e) => handleLaneDoubleClick(e, lane)}
+            >
               {events
                 .filter((e) => e.lane === lane)
                 .map((e, i) => {
@@ -135,8 +181,9 @@ export function Timeline({ events, transportSeconds, bpm, onEventsChange }: Time
                         width: `${widthPct}%`,
                         backgroundColor: LANE_COLORS[lane] ?? '#666',
                       }}
-                      title={editable ? `${e.label} — drag to move` : e.label}
+                      title={editable ? `${e.label} — drag to move, double-click to remove` : e.label}
                       onPointerDown={(ev) => handleBlockMouseDown(ev, e)}
+                      onDoubleClick={(ev) => handleBlockDoubleClick(ev, e)}
                     />
                   )
                 })}

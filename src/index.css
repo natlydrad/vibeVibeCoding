@@ -477,6 +477,10 @@ body {
   cursor: grabbing;
 }
 
+.timeline-lane-editable {
+  cursor: crosshair;
+}
+
 .oscilloscope {
   flex-shrink: 0;
   margin-top: 0.5rem;
